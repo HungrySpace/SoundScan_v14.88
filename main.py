@@ -9,7 +9,7 @@ bot = telebot.TeleBot(TELEGRAM_API_TOKEN)
 @bot.message_handler(content_types=["text"])
 def repeat_all_messages(message):  # Название функции не играет никакой роли
     print('text')
-    # bot.send_message(message.chat.id, message.text)
+    bot.send_message(message.chat.id, message.text)
 
 
 @bot.message_handler(content_types=['voice'])
