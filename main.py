@@ -63,65 +63,55 @@ def voice_processing(message):
 
     wav = wave.open(wav_name, mode="r")
     (nchannels, sampwidth, framerate, nframes, comptype, compname) = wav.getparams()
-    # print(nchannels, sampwidth, framerate, nframes, comptype, compname)
-    # duration = nframes / framerate
-    # w, h = 800, 300
-    # k = nframes/w/32
-    # # k = nframes
-    # DPI = 72
-    # peak = 256 ** sampwidth / 2
 
     content = wav.readframes(nframes)
     samples = np.frombuffer(content, dtype=types[sampwidth])
     channel = samples[1::nchannels]
-    print(channel)
+    print(len(channel))
+    # averageAmplitude = (sum(abs(channel)) / len(channel))*4
+    # print(averageAmplitude)
+    #
+    # i = 0
+    # listSamples = []
+    # while i < len(channel):
+    #     # print(abs(channel[i]))
+    #     if abs(channel[i]) > averageAmplitude:
+    #         NewPosition = round(i + (framerate * 0.4))
+    #         listSamples.append(np.array(channel[i:NewPosition], dtype=types[sampwidth]))
+    #         i = NewPosition
+    #     i += 1
 
-    averageAmplitude = (sum(abs(channel)) / len(channel))*2
-    print(averageAmplitude)
+    startPosition = np.argmax(channel) - 3000
+    finishPosition = round(startPosition + (framerate * 0.4))
+    sample = np.array(channel[startPosition:finishPosition], dtype=types[sampwidth])
+    print(sample)
+    frequencies, times, spectrogram = sg.spectrogram(sample, framerate, nfft=48000)
+    i1size = spectrogram.shape[0]
+    i2size = spectrogram.shape[1]
+    spectrogram2 = np.zeros((i1size))
 
-    i = 0
-    listSamples = []
-    while i < len(channel):
-        # print(abs(channel[i]))
-        if abs(channel[i]) > averageAmplitude:
-            NewPosition = round(i + (framerate * 0.4))
-            listSamples.append(np.array(channel[i:NewPosition], dtype=types[sampwidth]))
-            i = NewPosition
-        i += 1
+    i1 = 0
+    for i1 in range(i1size):
+        for i2 in range(i2size):
+            spectrogram2[i1] = spectrogram2[i1] + spectrogram[i1, i2]
+    t = np.arange(0, i1size, 1)
+    fig, ax = plt.subplots()
+    ax.plot(t, spectrogram2)
+    ax.grid()
+    fig.savefig(wav_name + '_1d.png')
+    # plt.show()
+    print(len(spectrogram2))
+    Value1 = list(spectrogram2).index(max(spectrogram2[0:200])) - 107.605
+    Value2 = list(spectrogram2).index(max(spectrogram2[300:500])) - 447.965
+    Value3 = list(spectrogram2).index(max(spectrogram2[600:1000])) - 713.425
+    Value4 = list(spectrogram2).index(max(spectrogram2[1100:1500])) - 1354.31
+    Value5 = list(spectrogram2).index(max(spectrogram2[1600:2000])) - 1785.205
 
-    print(len(listSamples))
-    NaturalFrequencies = []
-    for sample in listSamples:
-        frequencies, times, spectrogram = sg.spectrogram(sample, framerate, nfft=4096)
-        # 2d spectrogramm -> 1d spectrogramm2
-        i1size = spectrogram.shape[0]
-        i2size = spectrogram.shape[1]
-        spectrogram2 = np.zeros((i1size))
-
-        i1 = 0
-        for i1 in range(i1size):
-            for i2 in range(i2size):
-                spectrogram2[i1] = spectrogram2[i1] + spectrogram[i1, i2]
-        #show 1d
-        t = np.arange(0, i1size, 1)
-        fig, ax = plt.subplots()
-        ax.plot(t, spectrogram2)
-        ax.grid()
-        fig.savefig(wav_name + '_1d.png')
-        # plt.show()
-        # NaturalFrequencies.append([])
-        # print(list(spectrogram2).index(max(spectrogram2[0:200])), list(spectrogram2).index(max(spectrogram2[300:500])), list(spectrogram2).index(max(spectrogram2[600:1000])), list(spectrogram2).index(max(spectrogram2[1100:1500])), list(spectrogram2).index(max(spectrogram2[1600:2000])))
-        Value1 = list(spectrogram2).index(max(spectrogram2[0:200])) - 107.605
-        Value2 = list(spectrogram2).index(max(spectrogram2[300:500])) - 447.965
-        Value3 = list(spectrogram2).index(max(spectrogram2[600:1000])) - 713.425
-        Value4 = list(spectrogram2).index(max(spectrogram2[1100:1500])) - 1354.31
-        Value5 = list(spectrogram2).index(max(spectrogram2[1600:2000])) - 1785.205
-
-        print(myModel.predict([[Value1, Value2, Value3, Value4, Value5]]))
-        jopa = myModel.predict([[Value1, Value2, Value3, Value4, Value5]])
-        bot.send_message(message.chat.id, str(jopa) + "ответ")
-        bot.send_photo(message.chat.id, open(wav_name + '_1d.png', 'rb'))
-        print('finish one')
+    print(myModel.predict([[Value1, Value2, Value3, Value4, Value5]]))
+    jopa = myModel.predict([[Value1, Value2, Value3, Value4, Value5]])
+    bot.send_message(message.chat.id, str(jopa) + "ответ")
+    bot.send_photo(message.chat.id, open(wav_name + '_1d.png', 'rb'))
+    print('finish one')
 
 
 if __name__ == '__main__':
