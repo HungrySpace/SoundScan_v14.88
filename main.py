@@ -6,6 +6,9 @@ import wave
 import math
 import scipy.signal as sg
 import matplotlib.pyplot as plt
+import time
+import sys
+import os
 
 
 TELEGRAM_API_TOKEN = '1152345546:AAH0m8CDNkNwqNlnk19EY7qZrPbZlA3kK5c'
@@ -114,5 +117,19 @@ def voice_processing(message):
     print('finish one')
 
 
-if __name__ == '__main__':
-    bot.infinity_polling()
+while True:
+    try:
+        bot.polling(none_stop=True)
+        print("************************************************")
+    except Exception as e:
+        print(e)  # или просто print(e) если у вас логгера нет,
+        # или import traceback; traceback.print_exc() для печати полной инфы
+        print(time)
+        time.sleep(3)
+        """Restarts the current program.
+            Note: this function does not return. Any cleanup action (like
+            saving data) must be done before calling this function."""
+        python = sys.executable
+        os.execl(python, python, *sys.argv)
+# if __name__ == '__main__':
+#     bot.infinity_polling()
